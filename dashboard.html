@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRM Dashboard</title>
+</head>
+<body>
+
+<h1>CRM Dashboard</h1>
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Source</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody id="leadTable"></tbody>
+</table>
+
+<script>
+
+function loadLeads() {
+
+    fetch("http://localhost:5000/api/leads")
+    .then(res => res.json())
+    .then(leads => {
+
+        const table = document.getElementById("leadTable");
+        table.innerHTML = "";
+
+        leads.forEach(lead => {
+
+            // ✅ load saved data
+            let saved = localStorage.getItem(`lead-${lead._id}`);
+
+            if (saved) {
+                saved = JSON.parse(saved);
+            } else {
+                saved = { status: "", notes: "", followup: "" };
+            }
+
+            table.innerHTML += `
+            <tr>
+                <td>${lead.name}</td>
+                <td>${lead.email}</td>
+                <td>${lead.source}</td>
+
+                <td>
+                    <button onclick="editLead('${lead._id}')">
+                         Edit
+                    </button>
+
+                    <div id="edit-${lead._id}" style="display:none; margin-top:10px;">
+
+                        <select id="status-${lead._id}">
+                            <option value="New" ${saved.status === "New" ? "selected" : ""}>New</option>
+                            <option value="Contacted" ${saved.status === "Contacted" ? "selected" : ""}>Contacted</option>
+                            <option value="Converted" ${saved.status === "Converted" ? "selected" : ""}>Converted</option>
+                        </select>
+
+                        <br><br>
+
+                        <input type="text"
+                            id="notes-${lead._id}"
+                            placeholder="Enter Notes"
+                            value="${saved.notes}">
+
+                        <br><br>
+
+                        <input type="date"
+                            id="followup-${lead._id}"
+                            value="${saved.followup}">
+
+                        <br><br>
+
+                        <button onclick="saveLead('${lead._id}')">
+                            Save
+                        </button>
+
+                    </div>
+                </td>
+            </tr>
+            `;
+        });
+    });
+}
+
+function editLead(id) {
+
+    const box = document.getElementById(`edit-${id}`);
+
+    box.style.display = (box.style.display === "none") ? "block" : "none";
+}
+
+function saveLead(id) {
+
+    const status = document.getElementById(`status-${id}`).value;
+    const notes = document.getElementById(`notes-${id}`).value;
+    const followup = document.getElementById(`followup-${id}`).value;
+
+    const data = {
+        status,
+        notes,
+        followup
+    };
+
+    localStorage.setItem(`lead-${id}`, JSON.stringify(data));
+
+    alert("Saved Successfully ");
+}
+
+loadLeads();
+
+</script>
+
+</body>
+</html>
